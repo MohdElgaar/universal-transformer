@@ -1,7 +1,8 @@
 #!/bin/bash
 
-PROBLEM=algorithmic_addition_binary40
-PROBLEM=translate_enfr_wmt_small8k
+PROBLEM=timeseries_toy_problem
+#PROBLEM=algorithmic_addition_binary40
+#PROBLEM=translate_enfr_wmt_small8k
 MODEL=universal_transformer_mohd
 HPARAMS=universal_transformer_mohd_hparams
 
@@ -21,4 +22,5 @@ t2t-trainer \
     --hparams_set=$HPARAMS \
     --output_dir=$TRAIN_DIR \
     --train_steps=1000 \
-    --eval_steps=100
+    --eval_steps=100 \
+    --local_eval_frequency=1
