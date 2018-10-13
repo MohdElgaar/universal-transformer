@@ -13,7 +13,6 @@ TRAIN_DIR=./t2t_train/
 mkdir -p $DATA_DIR $TMP_DIR $TRAIN_DIR
 
 t2t-trainer \
-    --worker_gpu=0 \
     --t2t_usr_dir=. \
     --generate_data \
     --data_dir=$DATA_DIR \
@@ -23,4 +22,4 @@ t2t-trainer \
     --output_dir=$TRAIN_DIR \
     --train_steps=1000 \
     --eval_steps=100 \
-    --local_eval_frequency=1
+    --worker_gpu=0
