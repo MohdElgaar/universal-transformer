@@ -44,7 +44,8 @@ class UniversalTransformerMohd(t2t_model.T2TModel):
                 embedding_to_padding(inputs)
         self.encoder_attention_bias = common_attention.\
                 attention_bias_ignore_padding(inputs_embedding_mask)
-        #decoder bias causes targets to only attend to previous positions only (and itself)
+        #decoder bias causes targets to only attend to 
+        #previous positions (and itself)
         self.decoder_attention_bias = \
                 common_attention.attention_bias_lower_triangle\
                 (common_layers.shape_list(targets)[1])
@@ -171,15 +172,19 @@ class UniversalTransformerMohd(t2t_model.T2TModel):
                 reuse=tf.AUTO_REUSE):
             #treat hidden_size as one unit
             reduced_shape = common_layers.shape_list(inputs)[:-1] + [1] 
+            #reduced_shape = [batch_size,sequence_length,1]
             halting_probability = tf.zeros(reduced_shape,
-                    name="halting_probability") #[batch_size,sequence_length,1]
+                    name="halting_probability") 
+            #timestep_shape = [batch_size,sequence_length]
             timestep = tf.zeros(reduced_shape[:-1], dtype=tf.int32,
-                    name="timestep") #[batch_size,sequence_length]
+                    name="timestep") 
             active_mask = tf.ones(reduced_shape,
-                    name="active_mask") #[batch_size,sequence_length,1]
+                    name="active_mask") 
+            #input_shape = [batch_size,sequence_length,hidden_size]
             accumulate_outputs = tf.zeros_like(inputs,
-                    name="accumulate_outputs") #[batch_size,sequence_length,hidden_size]
-            def act_step(inputs, accumulate_outputs, active_mask, halting_probability, timestep):
+                    name="accumulate_outputs") 
+            def act_step(inputs, accumulate_outputs,
+                    active_mask, halting_probability, timestep):
                 #steps outputs and state
                 #state is analogous to RNN state s.t state=f^-1(outputs)
                 outputs = funct(inputs,timestep)
@@ -192,8 +197,8 @@ class UniversalTransformerMohd(t2t_model.T2TModel):
                         activation=tf.sigmoid,
                         name="new_halting_probability")
                 #these are units still active after this step
-                new_active_mask = tf.to_float(tf.less(halting_probability + \
-                        new_halting_probability,
+                new_active_mask = tf.to_float(tf.less(\
+                        halting_probability + new_halting_probability,
                         self.hparams.act_threshold))
 
                 #these are units the were active and halted at this step
@@ -210,7 +215,8 @@ class UniversalTransformerMohd(t2t_model.T2TModel):
 
                 #timestep holds timestep up to N(t)-1
                 timestep += tf.to_int32(tf.squeeze(new_active_mask,-1))
-                return outputs, accumulate_outputs, new_active_mask, new_halting_probability, timestep
+                return outputs, accumulate_outputs,\
+                        new_active_mask, new_halting_probability, timestep
             
             def halt_cond(_,__,___,halting_probability,timestep):
                 #some probability is less than threshold
@@ -221,9 +227,11 @@ class UniversalTransformerMohd(t2t_model.T2TModel):
                     self.hparams.act_max_steps))
                 return tf.logical_and(c1,c2)
             
-            outputs, accumulate_outputs, new_active_mask, new_halting_probability, timestep = \
+            outputs, accumulate_outputs, new_active_mask,\
+                    new_halting_probability, timestep = \
                     tf.while_loop(halt_cond, act_step,
-                            [inputs, accumulate_outputs, active_mask, halting_probability, timestep])
+                            [inputs, accumulate_outputs,
+                                active_mask, halting_probability, timestep])
         return accumulate_outputs
 
 @registry.register_hparams
