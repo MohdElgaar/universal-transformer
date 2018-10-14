@@ -22,4 +22,4 @@ t2t-trainer \
     --output_dir=$TRAIN_DIR \
     --train_steps=1000 \
     --eval_steps=100 \
-    --worker_gpu=0
+    #--worker_gpu=0
